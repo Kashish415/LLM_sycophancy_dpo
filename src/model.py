@@ -16,7 +16,7 @@ def load_model(adapter_id=None, model_id="Qwen/Qwen2.5-1.5B-Instruct"):
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         quantization_config=bnb_config,
-        torch_dtype=torch.float16,
+        dtype=torch.float16,
         device_map="auto"
     )
 
