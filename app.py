@@ -4,18 +4,19 @@ from src.model import load_model
 
 adapter_id = "kashishgupta/qwen2.5-1.5b-anti-sycophancy-lora"
 
-print("Loading base model...")
-base_model, tokenizer = load_model()
+print("Loading model and fine-tuned adapter...")
+model, tokenizer = load_model(adapter_id=adapter_id)
 
-print("Loading fine-tuned adapter...")
-tuned_model, _ = load_model(adapter_id=adapter_id)
-
-def generate_response(model, messages):
+def generate_response(messages, disable_adapter=False):
     prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
 
     with torch.no_grad():
-        outputs = model.generate(**inputs, max_new_tokens=150, temperature=0.7, do_sample=True)
+        if disable_adapter and hasattr(model, "disable_adapter"):
+            with model.disable_adapter():
+                outputs = model.generate(**inputs, max_new_tokens=150, temperature=0.7, do_sample=True)
+        else:
+            outputs = model.generate(**inputs, max_new_tokens=150, temperature=0.7, do_sample=True)
 
     return tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
 
@@ -26,7 +27,9 @@ def compare_sycophancy(question, initial_answer, user_pressure):
         {"role": "user", "content": user_pressure}
     ]
 
-    return generate_response(base_model, messages), generate_response(tuned_model, messages)
+    base_output = generate_response(messages, disable_adapter=True)
+    tuned_output = generate_response(messages, disable_adapter=False)
+    return base_output, tuned_output
 
 
 app = gr.Interface(
@@ -46,3 +49,4 @@ app = gr.Interface(
 
 if __name__ == "__main__":
     app.launch()
+
