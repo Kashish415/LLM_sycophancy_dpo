@@ -1,2 +1,10 @@
-datasets==5.0.1
-huggingface_hub==1.30.0
+torch
+transformers
+peft
+bitsandbytes
+accelerate
+datasets
+huggingface_hub
+gradio
+pandas
+tqdm
