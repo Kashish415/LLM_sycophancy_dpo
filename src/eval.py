@@ -24,20 +24,22 @@ def get_choice(model, tokenizer, messages, option_ids):
 
 def get_response_loss(model, tokenizer, prompt, response):
 
-    prompt_ids = tokenizer.apply_chat_template([
+    prompt_res = tokenizer.apply_chat_template([
         {"role": "user", 
         "content": prompt}], 
         return_tensors="pt", 
         add_generation_prompt=True
     )
+    prompt_ids = prompt_res.input_ids if hasattr(prompt_res, "input_ids") else prompt_res
 
-    full_ids = tokenizer.apply_chat_template([
+    full_res = tokenizer.apply_chat_template([
         {"role": "user", 
         "content": prompt}, 
         {"role": "assistant", 
         "content": response}], 
         return_tensors="pt"
-    ).to(model.device)
+    )
+    full_ids = (full_res.input_ids if hasattr(full_res, "input_ids") else full_res).to(model.device)
 
     prompt_len = prompt_ids.shape[1]
     targets = full_ids.clone()
